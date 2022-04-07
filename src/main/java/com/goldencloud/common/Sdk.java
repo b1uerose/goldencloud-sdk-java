@@ -1,6 +1,7 @@
 package com.goldencloud.common;
 
 import com.goldencloud.invoice.models.InvoiceBlue;
+import com.goldencloud.invoice.models.InvoiceQueryVO;
 import com.goldencloud.invoice.models.InvoiceRed;
 import net.sf.json.JSONObject;
 import org.apache.http.HttpResponse;
@@ -87,6 +88,33 @@ public class Sdk {
         String requestSignString = publicString+"signature="+sign;
         String postUrl = this.getBaseUrl()+url;
 
+        System.out.println("请求地址："+postUrl);
+        System.out.println("待签名串："+postData);
+        System.out.println("请求头："+requestSignString);
+        return this.httpPost(postUrl, postData,requestSignString);
+    }
+    
+    public JSONObject invoiceQuery(InvoiceQueryVO queryVo) throws RuntimeException,IOException,IllegalAccessException, InvocationTargetException
+    {
+        //步骤1 生成签名串
+        //*
+
+        //步骤2 生成的签名请求字符串。把排序好的 公共参数 格式化成 参数名称=参数值 的形式，加上signature=[步骤1] 中的签名串，用 "," (英文半角逗号) 拼接在一起。
+        //形如:algorithm=签名算法,appkey=应用ID,nonce=随机数字,timestamp=时间戳,signature=签名串
+
+        //步骤3 把[步骤2]中生成的签名请求字符串，放在 Authorization字段中，通过 Http header 方法，向服务器发起请求。
+        //*
+        String url = "/tax-api/invoice/cust/income/list/v1";
+        JSONObject data = JSONObject.fromObject(queryVo);//将java对象转换为json对象
+        String postData = data.toString();//将json对象转换为字符串
+
+        TreeMap<String, String> publicParams = GetPublicParamDic();//TreeMap的Key有序
+        String sign = generateSign(url, publicParams, data);
+
+        String publicString = JointPublicParamString(publicParams,",");
+
+        String requestSignString = publicString+"signature="+sign;
+        String postUrl = this.getBaseUrl()+url;
         System.out.println("请求地址："+postUrl);
         System.out.println("待签名串："+postData);
         System.out.println("请求头："+requestSignString);
@@ -213,6 +241,7 @@ public class Sdk {
         }finally {
             httpclient.close();
         }
+        System.out.println(response);
         return response;
     }
 
